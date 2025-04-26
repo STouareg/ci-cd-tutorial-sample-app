@@ -1,7 +1,6 @@
 import os
 import sys
 import unittest
-
 import json
 
 # Add parent directory to path for import
@@ -20,12 +19,19 @@ class BasicTests(unittest.TestCase):
         app.config['SQLALCHEMY_DATABASE_URI'] = \
             os.environ.get('TEST_DATABASE_URL') or \
             'sqlite:///' + TEST_DB
+
+        self.app_context = app.app_context()    # <-- ADD THIS
+        self.app_context.push()                 # <-- ADD THIS
+
         self.app = app.test_client()
+
         db.drop_all()
         db.create_all()
 
     def tearDown(self):
-        pass
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()                  # <-- ADD THIS
 
     def test_home(self):
         response = self.app.get('/', follow_redirects=True)
